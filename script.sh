@@ -111,9 +111,39 @@ cat "$domain/gf/redirect.txt" | sed 's/\=.*/=/' | tee "$domain/gf/purered.txt"
 gf idor "$domain/waybackurls/valid.txt" | tee "$domain/gf/idor.txt"
 echo -e ${CP}"\n [+]Nuclei Scanner Started "
 cat "$domain/httpx.txt" | nuclei -t ~/tools/nuclei-templates/ -c 50 -o "$domain/nuclei_scan/all.txt"
+[ ! -s "$domain/nuclei_scan/all.txt" ] && rm "$domain/nuclei_scan/all.txt"
 echo -e ${ORANGE}"\n[+] Searching For Open Redirection "
-cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt"
-python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
+cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt" || { echo -e "${RED}[!] Erreur lors de la génération de fuzzredirect.txt.${NC}"; exit 1; }
+# Génération automatique d'une URL par paramètre FUZZ pour OpenRedireX (version bash+sed)
+input="$domain/vulnerabilities/openredirect/fuzzredirect.txt"
+output="$domain/vulnerabilities/openredirect/fuzzredirect_single.txt"
+> "$output"
+while IFS= read -r url; do
+  n=$(grep -o "FUZZ" <<< "$url" | wc -l)
+  if [ "$n" -le 1 ]; then
+    echo "$url" >> "$output"
+  else
+    for i in $(seq 1 $n); do
+      tmp="$url"
+      c=1
+      while [[ $c -le $n ]]; do
+        if [ $c -eq $i ]; then
+          tmp="${tmp/FUZZ/FUZZ_ONLY}"
+        else
+          tmp="${tmp/FUZZ/FIXED}"
+        fi
+        c=$((c+1))
+      done
+      tmp="${tmp//FIXED/FIXEDVAL}"
+      tmp="${tmp/FUZZ_ONLY/FUZZ}"
+      tmp="${tmp//FIXEDVAL/FIXED}"
+      echo "$tmp" >> "$output"
+    done
+  fi
+done < "$input"
+
+cat "$output" | \
+python3 ~/tools/OpenRedireX/openredirex.py -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
 echo -e ${GREEN}"\n[+] Searching For XSS"
 cat "$domain/gf/xss.txt" | kxss  | tee "$domain/vulnerabilities/xss_scan/kxss.txt"
 cat "$domain/vulnerabilities/xss_scan/kxss.txt" | awk '{print $9}' | sed 's/=.*/=/' | tee "$domain/vulnerabilities/xss_scan/kxss1.txt"
@@ -161,6 +191,7 @@ echo -e ${GREEN}"\n[+] Searching For Cors Misconfiguration:- "
 python3 ~/tools/Corsy/corsy.py -i "$domain/final_domains/httpx.txt" -t 15 | tee "$domain/vulnerabilities/cors/cors_misconfig.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution de Corsy.${NC}"; exit 1; }
 echo -e ${CP}"\n[+] Nuclei Scanner Started:- "
 cat "$domain/final_domains/httpx.txt" | nuclei -t ~/tools/nuclei-templates/ -c 50 -o "$domain/nuclei_scan/all.txt"
+[ ! -s "$domain/nuclei_scan/all.txt" ] && rm "$domain/nuclei_scan/all.txt"
 echo -e ${CPO}"\n[+] Collecting URLS:- "
 cat "$domain/final_domains/domains.txt" | gau | tee "$domain/waybackurls/tmp.txt"
 cat "$domain/waybackurls/tmp.txt" | egrep -v "\.woff|\.ttf|\.svg|\.eot|\.png|\.jpeg|\.jpeg|\.css|\.ico|\jpg" | sed 's/:80//g;s/:443//g' | sort -u >> "$domain/waybackurls/wayback.txt"
@@ -186,8 +217,37 @@ gf redirect "$domain/waybackurls/valid.txt" | tee "$domain/gf/redirect.txt"
 cat "$domain/gf/redirect.txt" | sed 's/\=.*/=/' | tee "$domain/gf/purered.txt"
 gf idor "$domain/waybackurls/valid.txt" | tee "$domain/gf/idor.txt"
 echo -e ${ORANGE}"\n[+] Searching For Open Redirection:- "
-cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt"
-python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
+cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt" || { echo -e "${RED}[!] Erreur lors de la génération de fuzzredirect.txt.${NC}"; exit 1; }
+# Même correction pour massive_recon
+input="$domain/vulnerabilities/openredirect/fuzzredirect.txt"
+output="$domain/vulnerabilities/openredirect/fuzzredirect_single.txt"
+> "$output"
+while IFS= read -r url; do
+  n=$(grep -o "FUZZ" <<< "$url" | wc -l)
+  if [ "$n" -le 1 ]; then
+    echo "$url" >> "$output"
+  else
+    for i in $(seq 1 $n); do
+      tmp="$url"
+      c=1
+      while [[ $c -le $n ]]; do
+        if [ $c -eq $i ]; then
+          tmp="${tmp/FUZZ/FUZZ_ONLY}"
+        else
+          tmp="${tmp/FUZZ/FIXED}"
+        fi
+        c=$((c+1))
+      done
+      tmp="${tmp//FIXED/FIXEDVAL}"
+      tmp="${tmp/FUZZ_ONLY/FUZZ}"
+      tmp="${tmp//FIXEDVAL/FIXED}"
+      echo "$tmp" >> "$output"
+    done
+  fi
+done < "$input"
+
+cat "$output" | \
+python3 ~/tools/OpenRedireX/openredirex.py -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
 echo -e ${GREEN}"\n[+] Searching For XSS:- "
 cat "$domain/gf/xss.txt" | kxss  | tee "$domain/vulnerabilities/xss_scan/kxss.txt"
 cat "$domain/vulnerabilities/xss_scan/kxss.txt" | awk '{print $9}' | sed 's/=.*/=/' | tee "$domain/vulnerabilities/xss_scan/kxss1.txt"
