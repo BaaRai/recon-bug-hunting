@@ -21,6 +21,11 @@ for cmd in go git python3 pip3 sudo; do
     command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd n'est pas installé. Installe-le d'abord."; exit 1; }
 done
 
+# Création des dossiers nécessaires
+mkdir -p ~/.gf
+mkdir -p ~/tools
+mkdir -p ~/tools/resolvers
+
 echo -e ${RED}"################################################################## \n "
 echo -e ${CP}" $$$$$$            $$\                            $$$$$$  $$\                          "
 echo -e ${CP}"$$  __$$\           $$ |                          $$  __$$\ $$ |                         "
@@ -38,32 +43,32 @@ echo -e ${RED}"#################################################################
 
 sleep 2
 d=$(date +"%b-%d-%y %H:%M")
-echo -e ${CP}"[+]Installtion Started On: $d \n"
+echo -e ${CP}"[+]Installation Started On: $d \n"
 sleep 1
 echo -e ${BLUE}"[+]Checking Go Installation\n"
 if [[ -z "${GOPATH:-}" ]]; then
-  echo -e ${RED}"[+]Go is not Installed....Plz Install it and run the script again"
-  echo -e ${CP}"[+]For Installation Plz Check my recon-automation repo pre-requisite part!"
+  echo -e ${RED}"[+]Go n'est pas installé ou GOPATH n'est pas défini. Veuillez l'installer/configurer et relancer le script."
+  echo -e ${CP}"[+]Pour l'installation, consultez la partie pré-requis du repo recon-automation !"
   exit 1
-  else
-  echo -e ${BLUE}"..........Go is installed..............\n"
- fi
+else
+  echo -e ${BLUE}"..........Go est installé..............\n"
+fi
 echo -e ${GREEN}"[+]Installing Assetfinder\n"
 sleep 1
 assetfinder_checking(){
 command -v "assetfinder" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then 
-        go get -u github.com/tomnomnom/assetfinder >/dev/null 2>&1
-        echo -e ".............assetfinder successfully installed..............\n"
-        else
-        echo -e ".......assetfinder already installed..........\n"
+        go install github.com/tomnomnom/assetfinder@latest >/dev/null 2>&1
+        echo -e ".............assetfinder installé avec succès..............\n"
+    else
+        echo -e ".......assetfinder déjà installé...........\n"
     fi
 sleep 1
 echo -e ${CP}"[+]Installing gau\n"
 command -v "gau" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
             
-            go get -u -v github.com/lc/gau >/dev/null 2>&1
+            go install github.com/lc/gau@latest >/dev/null 2>&1
             echo -e ".........gau successfully installed................\n"
             else
             echo -e "...........gau already exists..................... \n"
@@ -73,7 +78,7 @@ echo -e ${CPO}"[+]Installing qsreplace\n"
 command -v "qsreplace" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
             
-            go get -u github.com/tomnomnom/qsreplace >/dev/null 2>&1
+            go install github.com/tomnomnom/qsreplace@latest >/dev/null 2>&1
             echo -e ".........qsreplace successfully installed............\n"
             else
             echo -e "...........qsreplace already exists.................. \n"
@@ -85,16 +90,15 @@ echo -e ${PINK}"[+]Installing gf tool\n"
 checking_gf(){
 command -v "gf" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go get -u github.com/tomnomnom/gf >/dev/null 2>&1
+         go install github.com/tomnomnom/gf@latest >/dev/null 2>&1
          # Ajout dans .bashrc si absent
          if ! grep -q 'gf-completion.zsh' ~/.bashrc; then
-           echo 'source $GOPATH/pkg/mod/github.com/tomnomnom/gf*/gf-completion.zsh' >> ~/.bashrc
+           echo 'source "$GOPATH"/pkg/mod/github.com/tomnomnom/gf*/gf-completion.zsh' >> ~/.bashrc
          fi
          cp -r "$GOPATH"/pkg/mod/github.com/tomnomnom/gf*/examples ~/.gf
-         source ~/.bashrc
-         echo -e "..............Gf tool Successfully installed..............\n"
-         else
-         echo -e "................Gf tool already exsist....................\n"
+         echo -e "..............Gf tool installé avec succès..............\n"
+     else
+         echo -e "................Gf tool déjà existant....................\n"
     fi
 sleep 1
 echo -e ${BLUE}"[+]Installing Gf Patterns\n"
@@ -102,9 +106,10 @@ if [[ ! -d ~/Gf-Patterns  ]]; then
         cd ~
         git clone https://github.com/1ndianl33t/Gf-Patterns.git
         sudo mv ~/Gf-Patterns/*.json ~/.gf
-        echo -e "...........Gf Patterns Successfully Installed............\n"
-        else
-        echo -e "...........Gf Patterns Already exsist.....................\n"
+        echo -e "...........Gf Patterns installés avec succès............\n"
+        cd - >/dev/null
+    else
+        echo -e "...........Gf Patterns déjà existants.....................\n"
     fi    
 }
 checking_gf
@@ -156,7 +161,7 @@ subfinder_checking(){
 command -v "subfinder" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
          
-         GO111MODULE=on go get -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder 
+         GO111MODULE=on go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
          echo -e "................subfinder successfully installed.............\n"
          else
          echo -e "............subfinder is already installed...................\n"
@@ -176,7 +181,7 @@ if [[ $? -ne 0 ]]; then
           make
           cd bin
           sudo mv massdns /usr/local/bin
-          echo -e "............massdns installed successfully..............\n"
+          echo -e "............massdns installé avec succès..............\n"
          else
          echo -e "..............massdns is already installed................\n"
     fi
@@ -186,7 +191,7 @@ sleep 1
 echo -e ${CP}"[+]Installing Nuclei\n"
 command -v "nuclei" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         GO111MODULE=on go get -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei   
+         GO111MODULE=on go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest   
          echo -e "...........Nuclei tool successfully installed...................\n"   
           else
           echo -e "...........Nuclei tool already exists...................\n"
@@ -227,7 +232,7 @@ other_tools(){
 echo -e ${CPO}"[+]Installing httpx\n"
 command -v "httpx" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then       
-        go get -v github.com/projectdiscovery/httpx/cmd/httpx
+        go install github.com/projectdiscovery/httpx/cmd/httpx@latest
         echo -e ".................httpx successfully installed..............\n"
          else
          echo -e "...............httpx is already installed.............\n"
@@ -236,7 +241,7 @@ sleep 1
 echo -e ${CP}"[+]Installing httprobe\n"
 command -v "httprobe" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then        
-         go get -u github.com/tomnomnom/httprobe 
+         go install github.com/tomnomnom/httprobe@latest 
          echo -e ".............httprobe successfully installed..............\n"
          else
          echo -e "...........httprobe is already installed...............\n"
@@ -248,12 +253,12 @@ if [[ $? -ne 0 ]]; then
         mkdir -p ~/tools
         cd ~/tools
   wget https://github.com/projectdiscovery/shuffledns/releases/download/v1.0.4/shuffledns_1.0.4_linux_amd64.tar.gz >/dev/null 2>&1
-        tar -xvzf shuffledns*.gz     
+        tar -xvzf shuffledns_1.0.4_linux_amd64.tar.gz     
         sudo mv shuffledns /usr/local/bin
-         rm shuffledns*.gz
-        echo -e "................shuffledns successfully installed..............\n"        
-         else
-        echo -e "..............shuffledns is already installed..................\n"
+         rm -f shuffledns_1.0.4_linux_amd64.tar.gz
+        echo -e "................shuffledns installé avec succès..............\n"        
+    else
+        echo -e "..............shuffledns déjà installé..................\n"
    fi
 sleep 1
 echo -e ${GREEN}"[+]Installing Seclists\n"
@@ -268,11 +273,13 @@ sleep 1
 echo -e ${CNC}"[+]Downloading LFI payloads\n"   
 if [[ ! -f ~/tools/dotdotpwn.txt ]]; then
          cd ~/tools
-wget https://raw.githubusercontent.com/swisskyrepo/PayloadsAllTheThings/master/Directory%20Traversal/Intruder/dotdotpwn.txt 
-        cat dotdotpwn.txt | head -n 120 > ~/tools/lfipayloads.txt
-        echo -e "..............LFI Payloads Successfully Downloaded..........\n"
-        else
-        echo -e ".................LFI Payloads Already Exists.................\n"
+         wget https://raw.githubusercontent.com/swisskyrepo/PayloadsAllTheThings/master/Directory%20Traversal/Intruder/dotdotpwn.txt 
+         cat dotdotpwn.txt | head -n 120 > ~/tools/lfipayloads.txt
+         echo -e "..............LFI Payloads téléchargés avec succès..........
+"
+         cd - >/dev/null
+    else
+        echo -e ".................LFI Payloads déjà existants.................\n"
 fi  
 sleep 1
 echo -e ${CP}"[+]Installing Corsy\n"
@@ -281,16 +288,17 @@ if [[ ! -d ~/tools/Corsy ]]; then
         git clone  https://github.com/s0md3v/Corsy.git
         cd Corsy
         sudo apt install python3-pip -y
-        pip3 install -r requirements.txt
-        echo -e "....................Cors installation done...................\n"
-        else
-        echo -e ".............Corsy already installed.................\n"
+        pip3 install --user -r requirements.txt
+        echo -e "....................Corsy installation terminée...................\n"
+        cd - >/dev/null
+    else
+        echo -e ".............Corsy déjà installé.................\n"
     fi
 sleep 1
 echo -e ${CNC}"[+]Installing waybackurls\n"
 command -v "waybackurls" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-        go get github.com/tomnomnom/waybackurls >/dev/null 2>&1
+        go install github.com/tomnomnom/waybackurls@latest >/dev/null 2>&1
         echo -e "......waybackurls installed successfully......\n"
         else
         echo -e "........waybackurls already exists...........\n"
@@ -299,7 +307,7 @@ sleep 1
 echo -e ${PINK}"[+]Installing Unfurl\n"
 command -v "unfurl" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go get -u github.com/tomnomnom/unfurl >/dev/null 2>&1
+         go install github.com/tomnomnom/unfurl@latest >/dev/null 2>&1
         echo -e "......Unfurl installed successfully..........\n"
         else
         echo -e "........Unfurl already exists................\n"   
@@ -308,7 +316,7 @@ sleep 1
 echo -e ${CNC}"[+]Installing ffuf\n"
 command -v "ffuf" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    go get -u github.com/ffuf/ffuf  >/dev/null 2>&1
+    go install github.com/ffuf/ffuf@latest  >/dev/null 2>&1
     echo -e ".......ffuf successfully installed........\n"
     else
     echo -e ".......ffuf already exists................\n"
@@ -327,7 +335,7 @@ echo -e ${BLUE}"[+]Installing kxss\n"
 command -v "kxss" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
     echo "........installing kxss............"
-    go get -u github.com/tomnomnom/hacks/kxss 
+    go install github.com/tomnomnom/hacks/kxss@latest 
     echo -e "........kxss installed successfully...........\n"
     else
     echo -e ".........kxss already exists.................\n"
@@ -336,7 +344,7 @@ sleep 1
 echo -e ${GREEN}"[+]Installing dalfox\n"
 command -v "dalfox" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    GO111MODULE=on go get -v github.com/hahwul/dalfox/v2 >/dev/null 2>&1
+    GO111MODULE=on go install github.com/hahwul/dalfox/v2@latest >/dev/null 2>&1
     echo -e ".........dalfox installed successfully...........\n"
     else
     echo -e "...........dalfox already exists...............\n"
@@ -348,7 +356,7 @@ subdomain_takeover(){
 echo -e ${GREEN}"[+]Installing subzy\n"
 command -v "subzy" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go get -u -v github.com/lukasikic/subzy >/dev/null 2>&1
+         go install github.com/lukasikic/subzy@latest >/dev/null 2>&1
          echo -e "..........Subzy takeover tool Installation done........\n"
          else
          echo -e "............subzy is already installed.............\n"
@@ -357,7 +365,7 @@ echo -e ${CP}"[+]Installing subjack\n"
 sleep 1
 command -v "subjack" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then         
-          go get github.com/haccer/subjack >/dev/null 2>&1
+          go install github.com/haccer/subjack@latest >/dev/null 2>&1
           cd ~/go/pkg/mod/github.com/haccer/
           sudo mv subjack@* subjack
           cd ~/go/
@@ -376,7 +384,7 @@ echo -e ${CN}"[+]Installing Gxss\n"
 xss_tools(){
 command -v "Gxss" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-        go get -u github.com/KathanP19/Gxss >/dev/null 2>&1
+        go install github.com/KathanP19/Gxss@latest >/dev/null 2>&1
         echo -e "...............Gxss successfully installed..................\n"
         else
         echo -e "..................Gxss already installed..................\n"
@@ -387,10 +395,11 @@ if [[ ! -d ~/tools/ParamSpider ]]; then
        cd ~/tools
         git clone https://github.com/devanshbatham/ParamSpider
        cd ParamSpider
-       pip3 install -r requirements.txt
-       echo -e "............ParamSpider Successfully Installed................\n"
-       else
-       echo -e "............ParamSpider already installed.....................\n"
+       pip3 install --user -r requirements.txt
+       echo -e "............ParamSpider installé avec succès................\n"
+       cd - >/dev/null
+    else
+       echo -e "............ParamSpider déjà installé.....................\n"
     fi
 sleep 1
 echo -e ${BLUE}"[+]Installing Arjun\n"
@@ -399,9 +408,10 @@ if [[ ! -d ~/tools/Arjun ]]; then
       git clone https://github.com/s0md3v/Arjun.git
        cd Arjun
        sudo python3 setup.py install 
-       echo -e "............Arjun Successfully Installed................\n"
-       else
-       echo -e "............Arjun already installed.....................\n"
+       echo -e "............Arjun installé avec succès................\n"
+       cd - >/dev/null
+    else
+       echo -e "............Arjun déjà installé.....................\n"
     fi
 }
 xss_tools

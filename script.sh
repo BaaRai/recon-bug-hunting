@@ -16,6 +16,38 @@ CPO='\033[1;38;5;205m'
 CN='\033[1;38;5;247m'
 CNC='\033[1;38;5;051m'
 
+# Vérification des dépendances
+check_dependencies() {
+    local missing=0
+    local deps=(httpx gau ffuf nuclei python3 curl jq subfinder assetfinder amass shuffledns subzy subjack kxss dalfox gf qsreplace unfurl sqlmap)
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" >/dev/null 2>&1; then
+            echo -e "${RED}[!] Dépendance manquante : $dep. Veuillez l'installer avant de lancer ce script.${NC}"
+            missing=1
+        fi
+    done
+    # Vérification des scripts Python spécifiques
+    if [ ! -f ~/tools/Corsy/corsy.py ]; then
+        echo -e "${RED}[!] ~/tools/Corsy/corsy.py est manquant. Veuillez installer Corsy.${NC}"
+        missing=1
+    fi
+    if [ ! -f ~/tools/OpenRedireX/openredirex.py ]; then
+        echo -e "${RED}[!] ~/tools/OpenRedireX/openredirex.py est manquant. Veuillez installer OpenRedireX.${NC}"
+        missing=1
+    fi
+    if [ ! -f ~/tools/OpenRedireX/payloads.txt ]; then
+        echo -e "${RED}[!] ~/tools/OpenRedireX/payloads.txt est manquant. Veuillez ajouter le fichier payloads.txt dans OpenRedireX.${NC}"
+        missing=1
+    fi
+    if [ ! -f ~/tools/lfipayloads.txt ]; then
+        echo -e "${RED}[!] ~/tools/lfipayloads.txt est manquant. Veuillez générer ou télécharger ce fichier.${NC}"
+        missing=1
+    fi
+    if [ $missing -eq 1 ]; then
+        exit 1
+    fi
+}
+
 function bounty_recon(){
 echo -e ${RED}"################################################################## \n "
 echo -e ${CP}" $$$$$$            $$\                            $$$$$$  $$\                          "
@@ -50,7 +82,7 @@ echo -e ${CP}"[+] Checking Services On Target:- \n"
 echo "$domain" | httpx -threads 30 -o "$domain/httpx.txt"
 sleep 1
 echo -e ${GREEN}"\n[+] Searching For Cors Misconfiguration:- "
-python3 ~/tools/Corsy/corsy.py -i "$domain/httpx.txt" -t 15 | tee "$domain/vulnerabilities/cors/cors_misconfig.txt"
+python3 ~/tools/Corsy/corsy.py -i "$domain/httpx.txt" -t 15 | tee "$domain/vulnerabilities/cors/cors_misconfig.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution de Corsy.${NC}"; exit 1; }
 sleep 1
 echo -e ${CPO}"\n[+] Collecting URLS:- \n"
 cat "$domain/httpx.txt" | gau | tee "$domain/waybackurls/tmp.txt"
@@ -84,7 +116,7 @@ cat "$domain/httpx.txt" | nuclei -t ~/tools/nuclei-templates/misconfiguration/ -
 cat "$domain/httpx.txt" | nuclei -t ~/tools/nuclei-templates/technologies/ -c 50 -o "$domain/nuclei_scan/tech.txt"
 echo -e ${ORANGE}"\n[+] Searching For Open Redirection "
 cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt"
-python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confrimopenred.txt"
+python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
 echo -e ${GREEN}"\n[+] Searching For XSS"
 cat "$domain/gf/xss.txt" | kxss  | tee "$domain/vulnerabilities/xss_scan/kxss.txt"
 cat "$domain/vulnerabilities/xss_scan/kxss.txt" | awk '{print $9}' | sed 's/=.*/=/' | tee "$domain/vulnerabilities/xss_scan/kxss1.txt"
@@ -110,7 +142,7 @@ mkdir -p "$domain" "$domain/domain_enum" "$domain/final_domains" "$domain/takeov
 echo -e ${RED}"\n[+] Massive Recon Started On $d:  "
 sleep 1
 echo -e ${CPO}"\n[+] Crt.sh Enumeration Started:- "
-curl -s "https://crt.sh/?q=%25.$domain&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u | tee "$domain/domain_enum/crt.txt"
+curl -s "https://crt.sh/?q=%25.$domain&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u | tee "$domain/domain_enum/crt.txt" || { echo -e "${RED}[!] Erreur lors de la récupération des sous-domaines via crt.sh.${NC}"; exit 1; }
 echo -e ${CP}"\n[+] subfinder Enumeration Started:- "
 subfinder -d "$domain" -o "$domain/domain_enum/subfinder.txt"
 echo -e ${PINK}"\n[+] Assetfinder Enumeration Started:- "
@@ -129,7 +161,7 @@ echo -e ${CP}"\n[+] Searching For Subdomain TakeOver:- "
 subzy -hide_fails -targets "$domain/domain_enum/all.txt" | tee "$domain/takeovers/subzy.txt"
 subjack -w "$domain/domain_enum/all.txt" -t 100 -timeout 30 -o "$domain/takeovers/take.txt" -ssl
 echo -e ${GREEN}"\n[+] Searching For Cors Misconfiguration:- "
-python3 ~/tools/Corsy/corsy.py -i "$domain/final_domains/httpx.txt" -t 15 | tee "$domain/vulnerabilities/cors/cors_misconfig.txt"
+python3 ~/tools/Corsy/corsy.py -i "$domain/final_domains/httpx.txt" -t 15 | tee "$domain/vulnerabilities/cors/cors_misconfig.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution de Corsy.${NC}"; exit 1; }
 echo -e ${CP}"\n[+] Nuclei Scanner Started:- "
 cat "$domain/final_domains/httpx.txt" | nuclei -t ~/tools/nuclei-templates/cves/ -c 50 -o "$domain/nuclei_scan/cves.txt"
 cat "$domain/final_domains/httpx.txt" | nuclei -t ~/tools/nuclei-templates/vulnerabilities/ -c 50 -o "$domain/nuclei_scan/vulnerabilities.txt"
@@ -161,7 +193,7 @@ cat "$domain/gf/redirect.txt" | sed 's/\=.*/=/' | tee "$domain/gf/purered.txt"
 gf idor "$domain/waybackurls/valid.txt" | tee "$domain/gf/idor.txt"
 echo -e ${ORANGE}"\n[+] Searching For Open Redirection:- "
 cat "$domain/gf/redirect.txt" | qsreplace FUZZ | tee "$domain/vulnerabilities/openredirect/fuzzredirect.txt"
-python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confrimopenred.txt"
+python3 ~/tools/OpenRedireX/openredirex.py -l "$domain/vulnerabilities/openredirect/fuzzredirect.txt" -p ~/tools/OpenRedireX/payloads.txt --keyword FUZZ | tee "$domain/vulnerabilities/openredirect/confirmopenred.txt" || { echo -e "${RED}[!] Erreur lors de l'exécution d'OpenRedireX.${NC}"; exit 1; }
 echo -e ${GREEN}"\n[+] Searching For XSS:- "
 cat "$domain/gf/xss.txt" | kxss  | tee "$domain/vulnerabilities/xss_scan/kxss.txt"
 cat "$domain/vulnerabilities/xss_scan/kxss.txt" | awk '{print $9}' | sed 's/=.*/=/' | tee "$domain/vulnerabilities/xss_scan/kxss1.txt"
@@ -173,22 +205,30 @@ sqlmap -m "$domain/gf/sql.txt" --batch --random-agent --level 1 | tee "$domain/v
 echo -e ${BLUE}"\n[+] Searching For LFI VULN:- "
 cat "$domain/gf/lfi.txt" | qsreplace FUZZ | while read url; do ffuf -u "$url" -mr "root:x" -w ~/tools/lfipayloads.txt -of csv -o "$domain/vulnerabilities/LFI/lfi.txt" -t 50 -c  ; done
 }
+
 menu(){
 clear
 bounty_recon
-echo -e -n ${YELLOW}"\n[*] Which Type of recon u want to Perform\n "
-echo -e "  ${NC}[${CG}"1"${NC}]${CNC} Single Target Recon"
-echo -e "   ${NC}[${CG}"2"${NC}]${CNC} Full Target Recon With Subdomains "
-echo -e "   ${NC}[${CG}"3"${NC}]${CNC} Exit"
-echo -n -e ${RED}"\n[+] Select: "
-read -r bounty_play
-if [ "$bounty_play" -eq 1 ]; then
-    single_recon
-elif [ "$bounty_play" -eq 2 ]; then
-    massive_recon
-elif [ "$bounty_play" -eq 3 ]; then
-    exit
-fi
-
+while true; do
+    echo -e -n ${YELLOW}"\n[*] Quel type de recon voulez-vous effectuer ?\n "
+    echo -e "  ${NC}[${CG}"1"${NC}]${CNC} Single Target Recon"
+    echo -e "   ${NC}[${CG}"2"${NC}]${CNC} Full Target Recon With Subdomains "
+    echo -e "   ${NC}[${CG}"3"${NC}]${CNC} Exit"
+    echo -n -e ${RED}"\n[+] Sélectionnez : "
+    read -r bounty_play
+    if [ "$bounty_play" = "1" ]; then
+        single_recon
+        break
+    elif [ "$bounty_play" = "2" ]; then
+        massive_recon
+        break
+    elif [ "$bounty_play" = "3" ]; then
+        exit
+    else
+        echo -e "${RED}[!] Entrée invalide. Veuillez choisir 1, 2 ou 3.${NC}"
+    fi
+  done
 }
+
+check_dependencies
 menu
