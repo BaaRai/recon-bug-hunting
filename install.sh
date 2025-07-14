@@ -352,32 +352,6 @@ if [[ $? -ne 0 ]]; then
 }
 other_tools
 sleep 1
-subdomain_takeover(){
-echo -e ${GREEN}"[+]Installing subzy\n"
-command -v "subzy" >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-         go install github.com/lukasikic/subzy@latest >/dev/null 2>&1
-         echo -e "..........Subzy takeover tool Installation done........\n"
-         else
-         echo -e "............subzy is already installed.............\n"
-    fi
-echo -e ${CP}"[+]Installing subjack\n"
-sleep 1
-command -v "subjack" >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then         
-          go install github.com/haccer/subjack@latest >/dev/null 2>&1
-          cd ~/go/pkg/mod/github.com/haccer/
-          sudo mv subjack@* subjack
-          cd ~/go/
-          mkdir -p src
-          mkdir -p src/github.com
-          sudo mv ~/go/pkg/mod/github.com/haccer ~/go/src/github.com/
-          
-         echo -e ".........Subjack takeover tool installation done.........\n"
-          else
-          echo -e "...........subjack is already installed.............\n"
-    fi
-}
 subdomain_takeover
 sleep 1
 echo -e ${CN}"[+]Installing Gxss\n"
