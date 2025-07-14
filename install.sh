@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 NC='\033[0m'
 RED='\033[1;38;5;196m'
@@ -58,7 +58,7 @@ sleep 1
 assetfinder_checking(){
 command -v "assetfinder" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then 
-        go install github.com/tomnomnom/assetfinder@latest >/dev/null 2>&1
+        go install github.com/tomnomnom/assetfinder@latest
         echo -e ".............assetfinder installé avec succès..............\n"
     else
         echo -e ".......assetfinder déjà installé...........\n"
@@ -68,7 +68,7 @@ echo -e ${CP}"[+]Installing gau\n"
 command -v "gau" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
             
-            go install github.com/lc/gau@latest >/dev/null 2>&1
+            go install github.com/lc/gau@latest
             echo -e ".........gau successfully installed................\n"
             else
             echo -e "...........gau already exists..................... \n"
@@ -78,7 +78,7 @@ echo -e ${CPO}"[+]Installing qsreplace\n"
 command -v "qsreplace" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
             
-            go install github.com/tomnomnom/qsreplace@latest >/dev/null 2>&1
+            go install github.com/tomnomnom/qsreplace@latest
             echo -e ".........qsreplace successfully installed............\n"
             else
             echo -e "...........qsreplace already exists.................. \n"
@@ -90,7 +90,7 @@ echo -e ${PINK}"[+]Installing gf tool\n"
 checking_gf(){
 command -v "gf" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go install github.com/tomnomnom/gf@latest >/dev/null 2>&1
+         go install github.com/tomnomnom/gf@latest
          # Ajout dans .bashrc si absent
          if ! grep -q 'gf-completion.zsh' ~/.bashrc; then
            echo 'source "$GOPATH"/pkg/mod/github.com/tomnomnom/gf*/gf-completion.zsh' >> ~/.bashrc
@@ -298,16 +298,16 @@ sleep 1
 echo -e ${CNC}"[+]Installing waybackurls\n"
 command -v "waybackurls" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-        go install github.com/tomnomnom/waybackurls@latest >/dev/null 2>&1
+        go install github.com/tomnomnom/waybackurls@latest
         echo -e "......waybackurls installed successfully......\n"
         else
-        echo -e "........waybackurls already exists...........\n"
+        echo -e ${CNC}"........waybackurls already exists...........\n"
     fi
 sleep 1
 echo -e ${PINK}"[+]Installing Unfurl\n"
 command -v "unfurl" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go install github.com/tomnomnom/unfurl@latest >/dev/null 2>&1
+         go install github.com/tomnomnom/unfurl@latest
         echo -e "......Unfurl installed successfully..........\n"
         else
         echo -e "........Unfurl already exists................\n"   
@@ -316,7 +316,7 @@ sleep 1
 echo -e ${CNC}"[+]Installing ffuf\n"
 command -v "ffuf" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    go install github.com/ffuf/ffuf@latest  >/dev/null 2>&1
+    go install github.com/ffuf/ffuf@latest 
     echo -e ".......ffuf successfully installed........\n"
     else
     echo -e ".......ffuf already exists................\n"
@@ -344,11 +344,12 @@ sleep 1
 echo -e ${GREEN}"[+]Installing dalfox\n"
 command -v "dalfox" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    GO111MODULE=on go install github.com/hahwul/dalfox/v2@latest >/dev/null 2>&1
+    GO111MODULE=on go install github.com/hahwul/dalfox/v2@latest
     echo -e ".........dalfox installed successfully...........\n"
     else
     echo -e "...........dalfox already exists...............\n"
     fi
+sleep 1
 }
 other_tools
 sleep 1
@@ -356,16 +357,16 @@ subdomain_takeover(){
 echo -e ${GREEN}"[+]Installing subzy\n"
 command -v "subzy" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-         go install github.com/lukasikic/subzy@latest >/dev/null 2>&1
+         go install github.com/PentestPad/subzy@latest
          echo -e "..........Subzy takeover tool Installation done........\n"
          else
          echo -e "............subzy is already installed.............\n"
     fi
-echo -e ${CP}"[+]Installing subjack\n"
 sleep 1
+echo -e ${CP}"[+]Installing subjack\n"
 command -v "subjack" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then         
-          go install github.com/haccer/subjack@latest >/dev/null 2>&1
+          go install github.com/haccer/subjack@latest
           cd ~/go/pkg/mod/github.com/haccer/
           sudo mv subjack@* subjack
           cd ~/go/
@@ -377,6 +378,7 @@ if [[ $? -ne 0 ]]; then
           else
           echo -e "...........subjack is already installed.............\n"
     fi
+sleep 1
 }
 subdomain_takeover
 sleep 1
@@ -384,7 +386,7 @@ echo -e ${CN}"[+]Installing Gxss\n"
 xss_tools(){
 command -v "Gxss" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-        go install github.com/KathanP19/Gxss@latest >/dev/null 2>&1
+        go install github.com/KathanP19/Gxss@latest
         echo -e "...............Gxss successfully installed..................\n"
         else
         echo -e "..................Gxss already installed..................\n"
@@ -416,3 +418,16 @@ if [[ ! -d ~/tools/Arjun ]]; then
 }
 xss_tools
 echo -e ${RED}"[+]***************All Done************************[+]\n"
+
+# Ajout automatique de $HOME/go/bin au PATH selon le shell
+if [ -n "${ZSH_VERSION-}" ]; then
+  if ! grep -Fxq 'export PATH="$PATH:$HOME/go/bin"' ~/.zshrc; then
+    echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.zshrc
+    echo "Ajout de \$HOME/go/bin au PATH dans .zshrc (ouvre un nouveau terminal ou fais 'source ~/.zshrc')"
+  fi
+elif [ -n "${BASH_VERSION-}" ]; then
+  if ! grep -Fxq 'export PATH="$PATH:$HOME/go/bin"' ~/.bashrc; then
+    echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.bashrc
+    echo "Ajout de \$HOME/go/bin au PATH dans .bashrc (ouvre un nouveau terminal ou fais 'source ~/.bashrc')"
+  fi
+fi
