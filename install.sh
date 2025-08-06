@@ -16,12 +16,12 @@ CPO='\033[1;38;5;205m'
 CN='\033[1;38;5;247m'
 CNC='\033[1;38;5;051m'
 
-# Vérification des dépendances de base
+# Base dependency verification
 for cmd in go git python3 pip3 sudo; do
-    command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd n'est pas installé. Installe-le d'abord."; exit 1; }
+    command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd is not installed. Install it first."; exit 1; }
 done
 
-# Création des dossiers nécessaires
+# Create necessary directories
 mkdir -p ~/.gf
 mkdir -p ~/tools
 mkdir -p ~/tools/resolvers
@@ -47,11 +47,11 @@ echo -e ${CP}"[+]Installation Started On: $d \n"
 sleep 1
 echo -e ${BLUE}"[+]Checking Go Installation\n"
 if [[ -z "${GOPATH:-}" ]]; then
-  echo -e ${RED}"[+]Go n'est pas installé ou GOPATH n'est pas défini. Veuillez l'installer/configurer et relancer le script."
-  echo -e ${CP}"[+]Pour l'installation, consultez la partie pré-requis du repo recon-automation !"
+  echo -e ${RED}"[+]Go is not installed or GOPATH is not defined. Please install/configure it and restart the script."
+  echo -e ${CP}"[+]For installation, check the prerequisites section of the recon-automation repo!"
   exit 1
 else
-  echo -e ${BLUE}"..........Go est installé..............\n"
+  echo -e ${BLUE}"..........Go is installed..............\n"
 fi
 echo -e ${GREEN}"[+]Installing Assetfinder\n"
 sleep 1
@@ -59,9 +59,9 @@ assetfinder_checking(){
 command -v "assetfinder" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then 
         go install github.com/tomnomnom/assetfinder@latest
-        echo -e ".............assetfinder installé avec succès..............\n"
+        echo -e ".............assetfinder successfully installed..............\n"
     else
-        echo -e ".......assetfinder déjà installé...........\n"
+        echo -e ".......assetfinder already installed...........\n"
     fi
 sleep 1
 echo -e ${CP}"[+]Installing gau\n"
@@ -91,14 +91,14 @@ checking_gf(){
 command -v "gf" >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
          go install github.com/tomnomnom/gf@latest
-         # Ajout dans .bashrc si absent
+         # Add to .bashrc if absent
          if ! grep -q 'gf-completion.zsh' ~/.bashrc; then
            echo 'source "$GOPATH"/pkg/mod/github.com/tomnomnom/gf*/gf-completion.zsh' >> ~/.bashrc
          fi
          cp -r "$GOPATH"/pkg/mod/github.com/tomnomnom/gf*/examples ~/.gf
-         echo -e "..............Gf tool installé avec succès..............\n"
+         echo -e "..............Gf tool successfully installed..............\n"
      else
-         echo -e "................Gf tool déjà existant....................\n"
+         echo -e "................Gf tool already exists....................\n"
     fi
 sleep 1
 echo -e ${BLUE}"[+]Installing Gf Patterns\n"
@@ -106,10 +106,10 @@ if [[ ! -d ~/Gf-Patterns  ]]; then
         cd ~
         git clone https://github.com/1ndianl33t/Gf-Patterns.git
         sudo mv ~/Gf-Patterns/*.json ~/.gf
-        echo -e "...........Gf Patterns installés avec succès............\n"
+        echo -e "...........Gf Patterns successfully installed............\n"
         cd - >/dev/null
     else
-        echo -e "...........Gf Patterns déjà existants.....................\n"
+        echo -e "...........Gf Patterns already exist.....................\n"
     fi    
 }
 checking_gf
@@ -181,7 +181,7 @@ if [[ $? -ne 0 ]]; then
           make
           cd bin
           sudo mv massdns /usr/local/bin
-          echo -e "............massdns installé avec succès..............\n"
+          echo -e "............massdns successfully installed..............\n"
          else
          echo -e "..............massdns is already installed................\n"
     fi
@@ -204,7 +204,7 @@ if [[ ! -d ~/tools/nuclei-templates ]]; then
          git clone https://github.com/projectdiscovery/nuclei-templates.git
          echo -e "...............Nuclei templates installation done..............\n"
          else
-         echo -e "................nuclei templates already exists................\n"
+         echo -e "................nuclei templates already exist................\n"
   fi
 sleep 1
 echo -e ${CP}"[+]Installing dnsvalidator\n"
@@ -221,7 +221,7 @@ if [[ $? -ne 0 ]]; then
        dnsvalidator -tL https://public-dns.info/nameservers.txt -threads 25 -o resolvers.txt
        cat resolvers.txt | tail -n 60 > ~/tools/resolvers/resolver.txt
        else
-        echo -e ".......dnsvalidator already exist.........\n"
+        echo -e ".......dnsvalidator already exists.........\n"
 fi
 
 }
@@ -256,9 +256,9 @@ if [[ $? -ne 0 ]]; then
         tar -xvzf shuffledns_1.0.4_linux_amd64.tar.gz     
         sudo mv shuffledns /usr/local/bin
          rm -f shuffledns_1.0.4_linux_amd64.tar.gz
-        echo -e "................shuffledns installé avec succès..............\n"        
+        echo -e "................shuffledns successfully installed..............\n"        
     else
-        echo -e "..............shuffledns déjà installé..................\n"
+        echo -e "..............shuffledns already installed..................\n"
    fi
 sleep 1
 echo -e ${GREEN}"[+]Installing Seclists\n"
@@ -275,11 +275,11 @@ if [[ ! -f ~/tools/dotdotpwn.txt ]]; then
          cd ~/tools
          wget https://raw.githubusercontent.com/swisskyrepo/PayloadsAllTheThings/master/Directory%20Traversal/Intruder/dotdotpwn.txt 
          cat dotdotpwn.txt | head -n 120 > ~/tools/lfipayloads.txt
-         echo -e "..............LFI Payloads téléchargés avec succès..........
+         echo -e "..............LFI Payloads successfully downloaded..........
 "
          cd - >/dev/null
     else
-        echo -e ".................LFI Payloads déjà existants.................\n"
+        echo -e ".................LFI Payloads already exist.................\n"
 fi  
 sleep 1
 echo -e ${CP}"[+]Installing Corsy\n"
@@ -289,10 +289,10 @@ if [[ ! -d ~/tools/Corsy ]]; then
         cd Corsy
         sudo apt install python3-pip -y
         pip3 install --user -r requirements.txt
-        echo -e "....................Corsy installation terminée...................\n"
+        echo -e "....................Corsy installation completed...................\n"
         cd - >/dev/null
     else
-        echo -e ".............Corsy déjà installé.................\n"
+        echo -e ".............Corsy already installed.................\n"
     fi
 sleep 1
 echo -e ${CNC}"[+]Installing waybackurls\n"
@@ -398,10 +398,10 @@ if [[ ! -d ~/tools/ParamSpider ]]; then
         git clone https://github.com/devanshbatham/ParamSpider
        cd ParamSpider
        pip3 install --user -r requirements.txt
-       echo -e "............ParamSpider installé avec succès................\n"
+       echo -e "............ParamSpider successfully installed................\n"
        cd - >/dev/null
     else
-       echo -e "............ParamSpider déjà installé.....................\n"
+       echo -e "............ParamSpider already installed.....................\n"
     fi
 sleep 1
 echo -e ${BLUE}"[+]Installing Arjun\n"
@@ -410,24 +410,24 @@ if [[ ! -d ~/tools/Arjun ]]; then
       git clone https://github.com/s0md3v/Arjun.git
        cd Arjun
        sudo python3 setup.py install 
-       echo -e "............Arjun installé avec succès................\n"
+       echo -e "............Arjun successfully installed................\n"
        cd - >/dev/null
     else
-       echo -e "............Arjun déjà installé.....................\n"
+       echo -e "............Arjun already installed.....................\n"
     fi
 }
 xss_tools
 echo -e ${RED}"[+]***************All Done************************[+]\n"
 
-# Ajout automatique de $HOME/go/bin au PATH selon le shell
+# Automatic addition of $HOME/go/bin to PATH according to shell
 if [ -n "${ZSH_VERSION-}" ]; then
   if ! grep -Fxq 'export PATH="$PATH:$HOME/go/bin"' ~/.zshrc; then
     echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.zshrc
-    echo "Ajout de \$HOME/go/bin au PATH dans .zshrc (ouvre un nouveau terminal ou fais 'source ~/.zshrc')"
+    echo "Added \$HOME/go/bin to PATH in .zshrc (open a new terminal or run 'source ~/.zshrc')"
   fi
 elif [ -n "${BASH_VERSION-}" ]; then
   if ! grep -Fxq 'export PATH="$PATH:$HOME/go/bin"' ~/.bashrc; then
     echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.bashrc
-    echo "Ajout de \$HOME/go/bin au PATH dans .bashrc (ouvre un nouveau terminal ou fais 'source ~/.bashrc')"
+    echo "Added \$HOME/go/bin to PATH in .bashrc (open a new terminal or run 'source ~/.bashrc')"
   fi
 fi

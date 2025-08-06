@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -euo pipefail  # Désactivé pour debug, voir comportement sans arrêt automatique
+# set -euo pipefail  # Disabled for debug, see behavior without automatic stop
 NC='\033[0m'
 RED='\033[1;38;5;196m'
 GREEN='\033[1;38;5;040m'
@@ -16,7 +16,7 @@ CPO='\033[1;38;5;205m'
 CN='\033[1;38;5;247m'
 CNC='\033[1;38;5;051m'
 
-# === Variables de configuration ===
+# === Configuration variables ===
 TOOLS_DIR="$HOME/tools"
 CORSY="$TOOLS_DIR/Corsy/corsy.py"
 OPENREDIREX="$TOOLS_DIR/OpenRedireX/openredirex.py"
@@ -25,55 +25,55 @@ LFI_PAYLOADS="$TOOLS_DIR/lfipayloads.txt"
 RESOLVERS="$TOOLS_DIR/resolvers/resolver.txt"
 NUCLEI_TEMPLATES="$TOOLS_DIR/nuclei-templates/"
 SECLISTS_DNS="/usr/share/seclists/Discovery/DNS/deepmagic.com-prefixes-top50000.txt"
-# Fichiers temporaires à nettoyer
+# Temporary files to clean up
 TMP_FILES=()
 
-# === Option de log global ===
+# === Global log option ===
 LOG_FILE=""
 if [[ "${1:-}" == "--log" && -n "${2:-}" ]]; then
   LOG_FILE="$2"
   exec > >(tee -a "$LOG_FILE") 2>&1
-  echo -e "\033[1;38;5;214m[+] Toute la sortie sera loggée dans : $LOG_FILE\033[0m"
+  echo -e "\033[1;38;5;214m[+] All output will be logged to: $LOG_FILE\033[0m"
 fi
 
-# Affichage de l'aide
+# Help display
 if [[ "${1:-}" == "--help" ]]; then
-  echo -e "\nUsage : $0 [options]\n"
-  echo "Options :"
-  echo "  --log fichier.log      Log toute la sortie dans fichier.log"
-  echo "  --help                Affiche cette aide et quitte"
-  echo "  --no-xss              Désactive la détection XSS"
-  echo "  --no-sqli             Désactive la détection SQLi"
-  echo "  --no-lfi              Désactive la détection LFI"
-  echo "  --no-nuclei           Désactive le scan Nuclei"
-  echo "  --no-cors             Désactive la détection CORS misconfig"
-  echo "  --no-openredirect     Désactive la détection Open Redirect"
-  echo "  --no-gf               Désactive l'analyse Gf patterns"
-  echo "  --no-ffuf             Désactive le scan FFUF"
-  echo "  --no-wordlist         Désactive la génération de wordlist cible"
-  echo "  --no-service          Désactive la détection des services (httpx)"
-  echo "  --no-urls             Désactive la collecte d'URLs (gau)"
+  echo -e "\nUsage: $0 [options]\n"
+  echo "Options:"
+  echo "  --log file.log         Log all output to file.log"
+  echo "  --help                Display this help and exit"
+  echo "  --no-xss              Disable XSS detection"
+  echo "  --no-sqli             Disable SQLi detection"
+  echo "  --no-lfi              Disable LFI detection"
+  echo "  --no-nuclei           Disable Nuclei scan"
+  echo "  --no-cors             Disable CORS misconfig detection"
+  echo "  --no-openredirect     Disable Open Redirect detection"
+  echo "  --no-gf               Disable Gf patterns analysis"
+  echo "  --no-ffuf             Disable FFUF scan"
+  echo "  --no-wordlist         Disable target wordlist generation"
+  echo "  --no-service          Disable service detection (httpx)"
+  echo "  --no-urls             Disable URL collection (gau)"
   echo ""
-  echo "Exemple : $0 --no-xss --no-nuclei --log recon.log"
+  echo "Example: $0 --no-xss --no-nuclei --log recon.log"
   echo ""
-  echo "The script automates the reconnaissance for the bug bounty."
+  echo "The script automates reconnaissance for bug bounty."
   echo "It checks dependencies, performs reconnaissance on a domain or scope, and organizes results."
-  echo "A final summary is written in summary.txt in the domain's directory."
+  echo "A final summary is written to summary.txt in the domain's directory."
   exit 0
 fi
 
-# === Vérification de l'OS ===
+# === OS verification ===
 if [[ "$(uname -s)" != "Linux" ]]; then
-  echo -e "${RED}[!] This script is intended for Linux only. Abandon.${NC}"
+  echo -e "${RED}[!] This script is intended for Linux only. Aborting.${NC}"
   exit 1
 fi
 
-# Séparateur visuel
+# Visual separator
 step_separator() {
-  echo -e "\n${YELLOW}=====================[ Start of step : $1 ]=====================${NC}\n"
+  echo -e "\n${YELLOW}=====================[ Start of step: $1 ]=====================${NC}\n"
 }
 
-# Vérification d'un outil avant usage
+# Tool verification before use
 check_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo -e "${RED}[!] Tool '$1' is missing. Install it before continuing.${NC}"
@@ -81,7 +81,7 @@ check_tool() {
   fi
 }
 
-# Vérification des dépendances
+# Dependency verification
 check_dependencies() {
     local missing=0
     local deps=(httpx gau ffuf nuclei python3 curl jq subfinder assetfinder amass shuffledns subzy subjack kxss dalfox gf qsreplace unfurl sqlmap)
@@ -91,7 +91,7 @@ check_dependencies() {
             missing=1
         fi
     done
-    # Vérification des scripts Python spécifiques
+    # Specific Python script verification
     if [ ! -f "$CORSY" ]; then
         echo -e "${RED}[!] $CORSY is missing. Please install Corsy.${NC}"
         missing=1
@@ -131,9 +131,10 @@ echo -e ${RED}"#################################################################
 }
 d=$(date +"%b-%d-%y %H:%M")
 
-# === Fonctions modulaires pour chaque étape du recon ===
+# === Modular functions for each recon step ===
 service_check() {
-  local input_file="$1"
+  local domain="$1"
+  local input_file="$2"
   step_separator "Service Check"
   check_tool httpx
   local start=$(date +%s)
@@ -274,7 +275,7 @@ lfi_scan() {
   echo -e "${GRAY}Duration: $((end-start)) seconds${NC}"
 }
 
-# Gestion des options pour désactiver toutes les étapes principales
+# Option management to disable all main steps
 NO_XSS=0
 NO_SQLI=0
 NO_LFI=0
@@ -305,22 +306,22 @@ done
 function single_recon(){
 clear
 bounty_recon
-echo -n -e ${ORANGE}"\n[+] Enter target domain (e.g evil.com) : " 
+echo -n -e ${ORANGE}"\n[+] Enter target domain (e.g evil.com): " 
 read -r domain
-# Sécurisation du nom de domaine (alphanum, tiret, point)
+# Domain name sanitization (alphanum, dash, dot)
 domain=$(echo "$domain" | sed 's/[^a-zA-Z0-9.-]//g')
 if [[ -z "$domain" ]]; then
-    echo -e "${RED}[-] No domain entered or invalid domain. Abandon." >&2
+    echo -e "${RED}[-] No domain entered or invalid domain. Aborting." >&2
     exit 1
 fi
 mkdir -p "$domain" "$domain/vulnerabilities" "$domain/vulnerabilities/cors" "$domain/target_wordlist" "$domain/gf" "$domain/vulnerabilities/openredirect/" "$domain/vulnerabilities/xss_scan" "$domain/nuclei_scan" "$domain/vulnerabilities/LFI" "$domain/vulnerabilities/sqli"
 echo -e ${BLUE}"\n[+] Starting reconnaissance on $d: \n"
 sleep 1
-if [ $NO_SERVICE -eq 0 ]; then service_check "$domain/httpx.txt"; fi
+if [ $NO_SERVICE -eq 0 ]; then service_check "$domain" "$domain/httpx.txt"; fi
 sleep 1
 if [ $NO_CORS -eq 0 ]; then cors_scan "$domain/httpx.txt" "$domain/vulnerabilities/cors/cors_misconfig.txt"; fi
 sleep 1
-# ffuf_scan, gf_patterns, etc. utilisent maintenant "$domain/httpx.txt" comme source
+# ffuf_scan, gf_patterns, etc. now use "$domain/httpx.txt" as source
 if [ $NO_FFUF -eq 0 ]; then ffuf_scan "$domain/httpx.txt" "$domain/ffuf-valid-tmp.txt" "$domain/ffuf-valid.txt"; fi
 sleep 1
 if [ $NO_GF -eq 0 ]; then gf_patterns "$domain/httpx.txt" "$domain/gf"; fi
@@ -334,7 +335,7 @@ sleep 1
 if [ $NO_SQLI -eq 0 ]; then sqli_scan "$domain/gf" "$domain/vulnerabilities/sqli"; fi
 sleep 1
 if [ $NO_LFI -eq 0 ]; then lfi_scan "$domain/gf" "$domain/vulnerabilities/LFI"; fi
-# Résumé final dans un fichier
+# Final summary in a file
 SUMMARY_FILE="$domain/summary.txt"
 echo "================ Summary of results for $domain ================" > "$SUMMARY_FILE"
 [ -f "$domain/vulnerabilities/xss_scan/vulnxss.txt" ] && echo "XSS found: $(grep -c 'Vulnerable' $domain/vulnerabilities/xss_scan/vulnxss.txt) ($domain/vulnerabilities/xss_scan/vulnxss.txt)" >> "$SUMMARY_FILE" || echo "XSS: None or step not run" >> "$SUMMARY_FILE"
@@ -351,10 +352,10 @@ clear
 bounty_recon
 echo -n -e ${BLUE2}"\n[+] Complete reconnaissance with subdomains (e.g *.example.com): "
 read -r domain
-# Sécurisation du nom de domaine (alphanum, tiret, point)
+# Domain name sanitization (alphanum, dash, dot)
 domain=$(echo "$domain" | sed 's/[^a-zA-Z0-9.-]//g')
 if [[ -z "$domain" ]]; then
-    echo -e "${RED}[-] No domain entered or invalid domain. Abandon." >&2
+    echo -e "${RED}[-] No domain entered or invalid domain. Aborting." >&2
     exit 1
 fi
 mkdir -p "$domain" "$domain/domain_enum" "$domain/final_domains" "$domain/takeovers" "$domain/vulnerabilities" "$domain/vulnerabilities/xss_scan" "$domain/vulnerabilities/sqli" "$domain/vulnerabilities/cors"  "$domain/nuclei_scan" "$domain/target_wordlist" "$domain/gf"  "$domain/vulnerabilities/LFI" "$domain/vulnerabilities/openredirect"
@@ -398,11 +399,11 @@ nuclei_scan "$domain/final_domains/httpx.txt" "$domain/nuclei_scan/all.txt"
 echo -e ${CPO}"\n[+] Collecting URLs:- "
 # collect_urls "$domain/final_domains/domains.txt" "$domain/waybackurls/tmp.txt" "$domain/waybackurls/wayback.txt" # Removed as per edit hint
 echo -e ${CNC}"\n[+] FFUF started on URLs:- "
-ffuf_scan "$domain/final_domains/domains.txt" "$domain/ffuf-valid-tmp.txt" "$domain/ffuf-valid.txt"
+ffuf_scan "$domain/final_domains/httpx.txt" "$domain/ffuf-valid-tmp.txt" "$domain/ffuf-valid.txt"
 echo -e ${PINK}"\n[+] Generating target keyword wordlist:- "
-generate_wordlists "$domain/final_domains/domains.txt" "$domain/target_wordlist/paths.txt" "$domain/target_wordlist/param.txt"
+generate_wordlists "$domain/final_domains/httpx.txt" "$domain/target_wordlist/paths.txt" "$domain/target_wordlist/param.txt"
 echo -e ${BLUE}"\n[+] Starting Gf models on valid URLs:- "
-gf_patterns "$domain/final_domains/domains.txt" "$domain/gf"
+gf_patterns "$domain/final_domains/httpx.txt" "$domain/gf"
 echo -e ${ORANGE}"\n[+] Open Redirect search:- "
 openredirect_scan "$domain/gf/redirect.txt" "$domain/vulnerabilities/openredirect/confirmopenred.txt"
 echo -e ${GREEN}"\n[+] XSS search:- "
@@ -426,7 +427,7 @@ menu(){
 clear
 bounty_recon
 while true; do
-    echo -e -n ${YELLOW}"\n[*] What type of reconnaissance would you like to perform ?\n "
+    echo -e -n ${YELLOW}"\n[*] What type of reconnaissance would you like to perform?\n "
     echo -e "  ${NC}[${CG}"1"${NC}]${CNC} Single target reconnaissance"
     echo -e "   ${NC}[${CG}"2"${NC}]${CNC} Complete reconnaissance with subdomains "
     echo -e "   ${NC}[${CG}"3"${NC}]${CNC} Exit"
@@ -449,7 +450,7 @@ while true; do
 check_dependencies
 menu
 
-# Nettoyage automatique à la sortie
+# Automatic cleanup on exit
 temp_cleanup() {
   for f in "${TMP_FILES[@]}"; do
     [ -f "$f" ] && rm -f "$f"
